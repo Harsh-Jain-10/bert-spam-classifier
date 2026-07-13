@@ -13,10 +13,10 @@ The classifier is trained on the popular **SMS Spam Collection dataset** using P
 
 ### Key Features
 * **Transformer-based Classification**: Leverages pretrained semantic embeddings from `bert-base-uncased` for sequence classification.
-* **Beginner-Friendly Notebooks**: Clear step-by-step guides for training (`train.ipynb`) and prediction/evaluation (`predict.ipynb`).
-* **High Performance**: Achieves **99.37%** validation accuracy on the held-out test split of the SMS Spam dataset.
-* **Detailed Evaluation**: Computes classification metrics, including the **Confusion Matrix** and **Classification Report** (Precision, Recall, F1-Score).
-* **Interactive Inference**: Allows testing custom inputs interactively inside the prediction notebook.
+* **Production-style Scripts**: Replaced Jupyter-based prediction workflows with portable Python scripts (`train.py` and `predict.py`).
+* **Interactive Prediction**: Execute interactive predictions inside the terminal using a simple command shell.
+* **Optional Batch Evaluation**: Evaluate the fine-tuned model on the held-out test split, reporting Accuracy, Confusion Matrix, and a full Classification Report.
+* **Ignored Weights Safety**: Pre-inference check to notify users if large weights are missing before Hugging Face raises long tracebacks.
 
 ---
 
@@ -24,9 +24,8 @@ The classifier is trained on the popular **SMS Spam Collection dataset** using P
 
 * **Programming Language**: Python 3.12+
 * **Deep Learning Framework**: PyTorch
-* **NLP & Transformers**: Hugging Face Transformers (Tokenizer & Trainer APIs), Accelerate
+* **NLP & Transformers**: Hugging Face Transformers, Accelerate
 * **Machine Learning & Data Science**: Scikit-Learn, Pandas, NumPy
-* **Environment**: Jupyter Notebook / VS Code
 
 ---
 
@@ -35,8 +34,8 @@ The classifier is trained on the popular **SMS Spam Collection dataset** using P
 The model uses the **SMS Spam Collection dataset**, which contains 5,572 English SMS messages.
 
 ### Data Preprocessing & Label Mapping
-The raw dataset (`dataset/spam.csv`) contains columns (`v1`, `v2`, and several unnamed columns). During cleaning:
-1. Only columns `v1` (label) and `v2` (text) are retained.
+The raw dataset (`dataset/spam.csv`) is loaded using `ISO-8859-1` encoding. During cleaning:
+1. Columns `v1` (label) and `v2` (text) are retained.
 2. Columns are renamed to `label` and `text`.
 3. Labels are mapped as follows:
    * **HAM** $\rightarrow$ `0` (4,825 samples)
@@ -59,18 +58,21 @@ bert-spam-classifier/
 │
 ├── model/
 │   ├── results/                  # Training checkpoints (ignored in git)
-│   ├── saved_model/              # Fine-tuned model checkpoints & configs
-│   │   ├── config.json           # Model configuration
-│   │   ├── model.safetensors     # Saved model weights (~438 MB, ignored in git)
-│   │   ├── special_tokens_map.json
-│   │   ├── tokenizer_config.json
-│   │   ├── tokenizer.json
-│   │   └── vocab.txt             # Vocabulary list for BERT
+│   └── saved_model/              # Fine-tuned model checkpoints & configs
+│       ├── config.json           # Model configuration
+│       ├── model.safetensors     # Saved model weights (~438 MB, ignored in git)
+│       ├── special_tokens_map.json
+│       ├── tokenizer.json
+│       ├── tokenizer_config.json
+│       └── vocab.txt             # Vocabulary list for BERT
 │   │
-│   ├── train.ipynb               # Notebook showing the fine-tuning workflow
-│   └── predict.ipynb             # Notebook for inference and test set evaluation
+│   └── train.ipynb               # Historical training notebook with preserved outputs
 │
-├── .gitignore                    # Git exclusions (ignores Pycache, venv, large weights)
+├── train.py                      # Script containing the reproducible training pipeline
+├── predict.py                    # Main script for prediction and evaluation
+│
+├── .gitignore                    # Git exclusions (ignores Pycache, venv, model weights)
+├── LICENSE                       # Repository LICENSE file
 ├── README.md                     # Project documentation
 └── requirements.txt              # Pinned Python package dependencies
 ```
@@ -82,7 +84,7 @@ bert-spam-classifier/
 > [!WARNING]
 > **Missing Model Weights Warning**: 
 > * The fine-tuned BERT model weights (`model/saved_model/model.safetensors`, ~438 MB) are **intentionally excluded** from this Git repository. This is because they exceed GitHub's standard 100 MB per-file tracking limit.
-> * As the trained weights are not currently hosted on a public repository (e.g., Hugging Face Hub), the prediction notebook `model/predict.ipynb` is **not immediately runnable after cloning** unless you train the model locally or obtain and place the fine-tuned `model.safetensors` file into the `model/saved_model/` directory.
+> * As the trained weights are not currently hosted on a public repository (e.g., Hugging Face Hub), the prediction script `predict.py` is **not immediately runnable after cloning** unless you train the model locally or obtain and place the fine-tuned `model.safetensors` file into the `model/saved_model/` directory.
 
 1. **Clone the Repository**:
    ```bash
@@ -104,35 +106,42 @@ bert-spam-classifier/
    pip install -r requirements.txt
    ```
 
-4. **Verify Environment**:
-   Ensure you have access to a Jupyter kernel:
-   ```bash
-   python -m ipykernel install --user --name=venv --display-name "Python (venv)"
-   ```
-
 ---
 
-## How to Run the Notebooks
+## How to Run the Scripts
 
-### 1. Model Training (`model/train.ipynb`)
-Open `model/train.ipynb` in VS Code or Jupyter Notebook. 
-* **Do not rerun the training cell (`trainer.train()`)** unless you explicitly wish to overwrite the model.
-* The fine-tuned weights took **73 minutes** to train on CPU and are saved in `model/saved_model`.
+### 1. Model Training (`train.py`)
+Run the training pipeline script from the project root:
+```bash
+python train.py
+```
+* **Note**: Training fine-tunes BERT and is computationally expensive. The original training loop took approximately **73 minutes** on CPU.
+* To view the historical output logs and epoch-by-epoch training details, open `model/train.ipynb`.
 
-### 2. Predict & Evaluate (`model/predict.ipynb`)
-Open `model/predict.ipynb` to evaluate the saved model and test predictions.
-* **Inference Workaround**: Due to a known issue loading the local tokenizer configuration (which triggers a `JSONDecodeError`), the notebook loads the tokenizer directly from `bert-base-uncased` while loading model weights from the local `model/saved_model/` directory:
-  ```python
-  tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-  model = BertForSequenceClassification.from_pretrained("model/saved_model")
+### 2. Predict Spam Interactively (`predict.py`)
+Run the interactive command-line interface:
+```bash
+python predict.py
+```
+* **Interactive Prompt**: The script prompts `Enter SMS Message:` and outputs classifications instantly:
+  ```text
+  Enter SMS Message: Congratulations! You have won 50000 rupees. Click here to claim your prize.
+  Prediction: SPAM
+  Confidence: 99.97%
   ```
-* Run all cells to generate prediction results, display the confusion matrix, and view the classification report.
+
+### 3. Evaluate Metrics (`predict.py --evaluate`)
+To run a detailed batch evaluation on the held-out test split:
+```bash
+python predict.py --evaluate
+```
+* This script splits the dataset, tokenizes the test messages, and outputs the final metrics.
 
 ---
 
 ## Model Performance
 
-The final validation metrics on the held-out test split (1,115 samples) are:
+The final validation metrics on the held-out test split (1,115 samples) calculated from the saved model:
 
 * **Evaluation Loss**: `0.04068`
 * **Test Accuracy**: **99.37%** (1,108 out of 1,115 samples correctly classified)
@@ -154,12 +163,6 @@ The final validation metrics on the held-out test split (1,115 samples) are:
    macro avg       0.99      0.98      0.99      1115
 weighted avg       0.99      0.99      0.99      1115
 ```
-
-### Prediction Examples
-* **Input**: *"Congratulations! You have won 50000 rupees. Click here to claim your prize."*
-  * **Prediction**: `SPAM` (Confidence: `99.97%`)
-* **Input**: *"Hey Harsh, are you coming to college tomorrow?"*
-  * **Prediction**: `HAM` (Confidence: `99.99%`)
 
 ---
 
