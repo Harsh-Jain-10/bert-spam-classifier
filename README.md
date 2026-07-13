@@ -71,13 +71,18 @@ bert-spam-classifier/
 │   └── predict.ipynb             # Notebook for inference and test set evaluation
 │
 ├── .gitignore                    # Git exclusions (ignores Pycache, venv, large weights)
-├── Readme.md                     # Project documentation
+├── README.md                     # Project documentation
 └── requirements.txt              # Pinned Python package dependencies
 ```
 
 ---
 
 ## Installation & Setup
+
+> [!WARNING]
+> **Missing Model Weights Warning**: 
+> * The fine-tuned BERT model weights (`model/saved_model/model.safetensors`, ~438 MB) are **intentionally excluded** from this Git repository. This is because they exceed GitHub's standard 100 MB per-file tracking limit.
+> * As the trained weights are not currently hosted on a public repository (e.g., Hugging Face Hub), the prediction notebook `model/predict.ipynb` is **not immediately runnable after cloning** unless you train the model locally or obtain and place the fine-tuned `model.safetensors` file into the `model/saved_model/` directory.
 
 1. **Clone the Repository**:
    ```bash
