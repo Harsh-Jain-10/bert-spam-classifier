@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Large model weights (exceeds GitHub's 100MB file limit)
+model/saved_model/model.safetensors
+
+# Training checkpoints and output logs
+model/results/
+results/
