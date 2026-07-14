@@ -1,0 +1,6 @@
+row_id,gmail_message_id,text,label,confidence,source
+5ecda06e00,msg_001,Subject: Weekly Team Sync\n\nBody: Hi Team, just a reminder that our weekly sync is tomorrow at 10 AM. Let me know if you have any agenda items. Thanks!,needs_reply,0.95,llm_bootstrap
+f1a8c3d820,msg_002,Subject: Special Offer: Buy 1 Get 1 Free\n\nBody: Dear customer, do not miss our clearance sale. Click here to claim your coupon code now!,spam,0.98,llm_bootstrap
+bcf3a10df9,msg_003,Subject: Your Newsletter: AI Trends\n\nBody: Welcome to this month's digest of machine learning and natural language processing advancements.,newsletter,0.92,llm_bootstrap
+a7c8e9b012,msg_004,Subject: Partnership request\n\nBody: Hi, I saw your website and would love to discuss a potential collaboration. Are you free for a call?,cold_outreach,0.85,llm_bootstrap
+d9e8f7a6b5,msg_005,Subject: Lunch today?\n\nBody: Hey, are we still on for lunch at the usual place today?,personal,0.99,llm_bootstrap

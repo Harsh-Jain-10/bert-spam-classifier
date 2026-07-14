@@ -191,3 +191,126 @@ weighted avg       0.99      0.99      0.99      1115
 * **Domain Adaptation**: Fine-tune the BERT model on a larger and more modern dataset containing email corpuses (e.g., Enron Spam dataset).
 * **Multi-modal Signals**: Integrate metadata parameters (sender verification status, domain age, link destination safety checks) alongside text classification.
 * **Model Distillation**: Distill the BERT model into a smaller, faster model (like DistilBERT or MobileBERT) for low-latency edge deployments.
+
+---
+
+## Multi-Class Email Triage Extension
+
+This extension adapts the binary spam/ham BERT classifier into a **6-class email triage classifier**.
+
+### Triage Classes
+1. `needs_reply`: Emails requesting responses or actions.
+2. `fyi`: Informational updates, receipts, notifications.
+3. `newsletter`: Digests, subscriptions, mailing lists.
+4. `cold_outreach`: Unsolicited sales, recruitment, networking.
+5. `personal`: Messages from friends, family, direct contacts.
+6. `spam`: Unsolicited bulk promotions, advertisements, or phishing.
+
+---
+
+### Data Flow & Execution Order
+
+To run the pipeline from end to end:
+
+```
+[Gmail API] ──(triage/fetch_emails.py)──> [dataset/emails.csv] 
+                                                  │
+                                                  ▼
+                                       (triage/bootstrap_labels.py)
+                                        [Groq: llama-3.1-8b-instant]
+                                                  │
+            ┌─────────────────────────────────────┴─────────────────────────────────────┐
+            ▼ (confidence >= 0.7)                                                       ▼ (confidence < 0.7 or sampled)
+[dataset/triage_labeled.csv]                                       [dataset/triage_sample_review.csv]
+            ▲                                                                           │
+            │                                                                           ▼
+            └─────────────────────── (triage/merge_reviewed_labels.py) ◄───────── [Manual Corrections]
+                                                  │
+                                                  ▼
+                                        (triage/train_triage.py)
+                                                  │
+                                                  ▼
+                                     [model/saved_model_triage/] ◄───────(triage/predict_triage.py)
+                                                  │
+                                                  ▼
+                                            (triage/serve.py)
+                                                  │
+                                                  ▼
+                                         (triage/gmail_watcher.py)
+```
+
+#### Step 1: Set up Google Cloud Credentials
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a project, enable the **Gmail API**, and configure the **OAuth consent screen** (under Testing publishing status, add your Gmail account as a Test User).
+3. Create an **OAuth 2.0 Client ID** credential (select Application type: **Desktop App**).
+4. Download the JSON credentials file, rename it to `credentials.json`, and place it in the project root folder.
+
+#### Step 2: Extract Emails (`triage/fetch_emails.py`)
+Fetch recent primary emails from Gmail and save them locally:
+```bash
+python triage/fetch_emails.py --limit 150 --query "category:primary"
+```
+This sanitizes HTML tags, quoted reply chains, and signature blocks automatically and saves them to `dataset/emails.csv` (gitignored). Re-runs will deduplicate messages based on Gmail Message ID.
+
+#### Step 3: Bootstrap Labels via Groq (`triage/bootstrap_labels.py`)
+Use the Groq API (free tier) to zero-shot label the fetched emails:
+```bash
+# Set your Groq API Key (PowerShell example)
+$env:GROQ_API_KEY="gsk_your_groq_api_key"
+
+python triage/bootstrap_labels.py --min-confidence 0.7 --sample-review 10
+```
+- Emails classified with confidence $\ge$ 0.7 are stored in `dataset/triage_labeled.csv`.
+- Low-confidence emails ($<$ 0.7) and a sample of $N$ high-confidence emails are routed to `dataset/triage_sample_review.csv` with `reviewed=False` for manual inspection.
+
+#### Step 4: Closed-Loop Correction & Merging (`triage/merge_reviewed_labels.py`)
+1. Open `dataset/triage_sample_review.csv` in Excel or a text editor.
+2. Review the `label` column and make corrections if needed.
+3. Set the `reviewed` column to `True` for the corrected/checked rows.
+4. Merge them back into the main training set:
+```bash
+python triage/merge_reviewed_labels.py
+```
+
+#### Step 5: Multi-class Model Training (`triage/train_triage.py`)
+Train the 6-class BERT classifier:
+```bash
+python triage/train_triage.py --min-examples-per-class 100 --epochs 3
+```
+- Training enforces a minimum of 100 examples per class (configurable via CLI flag).
+- Saves the model checkpoints to `model/saved_model_triage/` (does not overwrite the binary model).
+- Automatically saves the test split `row_id` values to `model/saved_model_triage/test_row_ids.txt` to eliminate data leakage during evaluation.
+
+#### Step 6: Prediction & Evaluation (`triage/predict_triage.py`)
+Test the fine-tuned multi-class model:
+* **Interactive Mode**:
+  ```bash
+  python triage/predict_triage.py
+  ```
+* **Evaluation Mode** (evaluates on the held-out test split using saved row IDs):
+  ```bash
+  python triage/predict_triage.py --evaluate
+  ```
+
+#### Step 7: Start the Serving Endpoint (`triage/serve.py`)
+Expose the classifier as a REST API:
+```bash
+uvicorn triage.serve:app --reload
+```
+This starts a FastAPI app on `http://127.0.0.1:8000`. You can POST classification requests to `http://127.0.0.1:8000/classify`:
+```json
+{
+  "text": "Subject: Partnership Request\n\nBody: Hi, let's collaborate on a marketing campaign."
+}
+```
+
+#### Step 8: Start the Gmail Watcher Daemon (`triage/gmail_watcher.py`)
+Run the email triage background watcher:
+```bash
+python triage/gmail_watcher.py --interval 5 --dry-run
+```
+- The watcher polls Gmail every 5 minutes (default, configurable).
+- It queries unread emails and excludes those already categorized with triage labels.
+- It calls the local classification endpoint and applies the predicted label to the email in Gmail (creating the label if it does not exist yet).
+- Remove the `--dry-run` flag to let it modify Gmail labels.
+

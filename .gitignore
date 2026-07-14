@@ -22,3 +22,12 @@ model/saved_model/model.safetensors
 # Training checkpoints and output logs
 model/results/
 results/
+
+# Local email datasets (containing personal/private content)
+dataset/emails.csv
+dataset/triage_labeled.csv
+dataset/triage_sample_review.csv
+
+# Google API client config and user OAuth session token
+credentials.json
+token.json
