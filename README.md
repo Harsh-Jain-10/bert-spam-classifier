@@ -2,12 +2,12 @@
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0F2027,100:2C5364&height=180&section=header&text=BERT%20Spam%20Classifier&fontSize=42&fontColor=ffffff&animation=fadeIn&fontAlignY=35" width="100%"/>
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&pause=1000&color=2C5364&center=true&vCenter=true&width=600&lines=Fine-tuned+BERT+for+SMS+Spam+Detection;99.37%25+Test+Accuracy;Binary+%2B+6-Class+Email+Triage+Extension" alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&pause=1000&color=61DBFB&background=00000000&center=true&vCenter=true&width=600&lines=Fine-tuned+BERT+for+SMS+Spam+Detection;99.37%25+Test+Accuracy;Binary+%2B+6-Class+Email+Triage+Extension" alt="Typing SVG" />
 
-[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![HuggingFace](https://img.shields.io/badge/🤗%20Transformers-FFD21E?style=for-the-badge)](https://huggingface.co/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![Python](https://img.shields.io/badge/PYTHON-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=FFD43B&labelColor=1a1a1a)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PYTORCH-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white&labelColor=EE4C2C)](https://pytorch.org/)
+[![HuggingFace](https://img.shields.io/badge/🤗_TRANSFORMERS-FFD21E?style=for-the-badge&labelColor=FFD21E&color=FFD21E&logoColor=black)](https://huggingface.co/)
+[![License](https://img.shields.io/badge/LICENSE-MIT-1a1a1a?style=for-the-badge&labelColor=1a1a1a&color=4CAF50)](LICENSE)
 
 </div>
 
