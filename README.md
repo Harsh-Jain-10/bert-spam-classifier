@@ -60,7 +60,7 @@ Confusion Matrix:
 
 ## 🛠️ Tech Stack
 
-`Python 3.12+` · `PyTorch` · `Hugging Face Transformers` · `Accelerate` · `Scikit-Learn` · `Pandas` · `NumPy`
+`Python ` · `PyTorch` · `Hugging Face Transformers` · `Accelerate` · `Scikit-Learn` · `Pandas` · `NumPy`
 
 ## 📂 Dataset
 
